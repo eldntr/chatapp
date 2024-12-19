@@ -1,0 +1,85 @@
+version: '3.8'
+
+services:
+  websocket:
+    image: node:14
+    working_dir: /app
+    volumes:
+      - ./websocket:/app
+    command: sh -c "npm install && npm start"
+    ports:
+      - "3002:3002"
+    depends_on:
+      - backend
+      - auth
+    networks:
+      - chat-network
+
+  backend:
+    image: node:14
+    working_dir: /app
+    volumes:
+      - ./backend:/app
+    command: sh -c "npm install && npm start"
+    ports:
+      - "3001:3001"
+    depends_on:
+      - mongo-backend
+    environment:
+      - NODE_ENV=development
+    networks:
+      - chat-network
+
+  auth:
+    image: node:14
+    working_dir: /app
+    volumes:
+      - ./auth:/app
+    command: sh -c "npm install && npm start"
+    ports:
+      - "4000:4000"
+    depends_on:
+      - mongo-auth
+    networks:
+      - chat-network
+
+  frontend:
+    image: node:14
+    working_dir: /app
+    volumes:
+      - ./frontend:/app
+    command: sh -c "npm install && npm start"
+    ports:
+      - "8081:8081"
+    depends_on:
+      - backend
+      - auth
+      - websocket
+    networks:
+      - chat-network
+
+  mongo-backend:
+    image: mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data-backend:/data/db
+    networks:
+      - chat-network
+
+  mongo-auth:
+    image: mongo
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongo-data-auth:/data/db
+    networks:
+      - chat-network
+
+networks:
+  chat-network:
+    driver: bridge
+
+volumes:
+  mongo-data-backend:
+  mongo-data-auth:
